@@ -101,6 +101,7 @@ public class BackgroundJobProcessor {
             Files.writeString(folder.resolve("invoice-" + job.getOrderId() + ".html"),
                     html, StandardCharsets.UTF_8);
         } catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException("Invoice generation failed", e);
         }
     }

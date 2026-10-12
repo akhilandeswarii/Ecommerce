@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { getProducts } from "../api/productApi";
 import type { Product } from "../types/product";
@@ -16,28 +17,52 @@ function ProductList({ isAdmin = false }: ProductListProps) {
 
     useEffect(() => {
         getProducts()
-            .then(setProducts)
-            .catch(() => setError("Unable to load products"))
-            .finally(() => setLoading(false));
+            .then((data) => {
+                setProducts(Array.isArray(data) ? data : []);
+            })
+            .catch(() => {
+                setError("Unable to load products");
+            })
+            .finally(() => {
+                setLoading(false);
+            });
     }, []);
 
     const categories = [
         "All",
-        ...new Set(products.map((product) => product.category))
+        ...new Set(
+            products
+                .map((product) => product.category)
+                .filter(
+                    (item): item is string =>
+                        typeof item === "string" && item.trim() !== ""
+                )
+        ),
     ];
 
-    const filteredProducts = products.filter((product) =>
-        product.productName.toLowerCase().includes(search.toLowerCase()) &&
-        (category === "All" || product.category === category)
-    );
+    const filteredProducts = products.filter((product) => {
+        const productName = (product.productName ?? "").toLowerCase();
+        const productCategory = product.category ?? "";
 
-    if (loading) return <p>Loading products...</p>;
-    if (error) return <p className="error-message">{error}</p>;
+        return (
+            productName.includes(search.toLowerCase()) &&
+            (category === "All" || productCategory === category)
+        );
+    });
+
+    if (loading) {
+        return <p>Loading products...</p>;
+    }
+
+    if (error) {
+        return <p className="error-message">{error}</p>;
+    }
 
     return (
         <div>
             <div className="filters">
                 <input
+                    type="text"
                     placeholder="Search products"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
@@ -48,7 +73,9 @@ function ProductList({ isAdmin = false }: ProductListProps) {
                     onChange={(e) => setCategory(e.target.value)}
                 >
                     {categories.map((item) => (
-                        <option key={item}>{item}</option>
+                        <option key={item} value={item}>
+                            {item}
+                        </option>
                     ))}
                 </select>
             </div>
@@ -62,7 +89,12 @@ function ProductList({ isAdmin = false }: ProductListProps) {
                     />
                 ))}
             </div>
+
+            {filteredProducts.length === 0 && (
+                <p>No products found.</p>
+            )}
         </div>
     );
 }
+
 export default ProductList;

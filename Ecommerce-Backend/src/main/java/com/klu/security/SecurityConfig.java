@@ -73,9 +73,10 @@ public class SecurityConfig {
 
         configuration.setAllowedOrigins(List.of(
             "http://localhost:5173",
-            "https://ecommerce-pi-six-79.vercel.app"
-        ));
-
+            "https://ecommerce-pi-six-79.vercel.app",
+            "https://ecommerce-odf92b7p9-akhilandeswari.vercel.app",
+             "https://ecommerce-git-main-akhilandeswari.vercel.app"
+       ));
         configuration.setAllowedMethods(List.of(
             "GET", "POST", "PUT", "DELETE", "OPTIONS"
         ));

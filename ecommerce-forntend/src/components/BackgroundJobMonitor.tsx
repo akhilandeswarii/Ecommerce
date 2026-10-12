@@ -15,17 +15,22 @@ function BackgroundJobMonitor() {
 
     useEffect(() => {
         const token = localStorage.getItem("token");
+        const apiUrl = import.meta.env.VITE_API_URL;
 
-        //fetch("http://localhost:8001/api/jobs",
-           fetch( `${import.meta.env.VITE_API_URL}/api/jobs`, {
+        fetch(`${apiUrl}/api/jobs`, {
             headers: { Authorization: `Bearer ${token}` }
         })
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) throw new Error("Failed to load jobs");
+                return res.json();
+            })
             .then(setJobs)
             .catch(console.error);
 
+        const wsUrl = apiUrl.replace(/^http/, "ws") + "/ws-smartcart";
+
         const client = new Client({
-            brokerURL: "ws://localhost:8080/ws-smartcart",
+            brokerURL: wsUrl,
             reconnectDelay: 5000,
 
             onConnect: () => {
@@ -45,6 +50,10 @@ function BackgroundJobMonitor() {
                             : [updatedJob, ...old];
                     });
                 });
+            },
+
+            onStompError: frame => {
+                console.error("WebSocket error:", frame.headers["message"]);
             }
         });
 
@@ -55,7 +64,6 @@ function BackgroundJobMonitor() {
     return (
         <div className="job-monitor">
             <h2>Background Job Monitor</h2>
-
             <table>
                 <thead>
                     <tr>
@@ -66,14 +74,13 @@ function BackgroundJobMonitor() {
                         <th>Message</th>
                     </tr>
                 </thead>
-
                 <tbody>
                     {jobs.map(job => (
                         <tr key={job.jobId}>
                             <td>{job.jobId}</td>
                             <td>{job.orderId}</td>
                             <td>{job.jobType}</td>
-                            <td className={job.status.toLowerCase()}>
+                            <td className={(job.status ?? "").toLowerCase()}>
                                 {job.status}
                             </td>
                             <td>{job.message}</td>
@@ -84,4 +91,5 @@ function BackgroundJobMonitor() {
         </div>
     );
 }
+
 export default BackgroundJobMonitor;

@@ -1,3 +1,4 @@
+
 package com.klu.security;
 
 import java.util.List;
@@ -25,31 +26,33 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http)
+            throws Exception {
+
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                // CORS Preflight
+
+                // Allow CORS preflight requests
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                // Signup and Signin
+
+                // Authentication
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/jobs/**").hasRole("ADMIN")
-                // Product View
-                .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
-                // Product Insert
-                .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
-                // Product Update
-                .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
-                // Product Delete
-                .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
+
+                // Payment webhook
                 .requestMatchers("/api/payment/webhook").permitAll()
-                .requestMatchers("/api/auth/**").permitAll()
+
+                // Admin-only jobs
+                .requestMatchers("/api/jobs/**").hasRole("ADMIN")
+
+                // Product access
                 .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
 
+                // All other requests require authentication
                 .anyRequest().authenticated()
             )
             .sessionManagement(session ->
@@ -65,17 +68,19 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
+
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(
-            List.of("http://localhost:5173","https://ecommerce-pi-six-79.vercel.app")
-        );
-        configuration.setAllowedMethods(
-            List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")
-        );
-        configuration.setAllowedHeaders(
-            List.of("*")
-        );
+        configuration.setAllowedOrigins(List.of(
+            "http://localhost:5173",
+            "https://ecommerce-pi-six-79.vercel.app"
+        ));
+
+        configuration.setAllowedMethods(List.of(
+            "GET", "POST", "PUT", "DELETE", "OPTIONS"
+        ));
+
+        configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source =
